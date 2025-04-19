@@ -20,7 +20,7 @@ class HttpFile(io.RawIOBase):
         end_pos = self.pos + size - 1
         if self.pos >= self.size:
             raise ValueError("reached EOF!")
-        headers = {"Range": f"bytes={self.pos}-{end_pos}"}
+        headers = {"Range": f"bytes={self.pos}-{end_pos}", "User-Agent": "Dalvik/2.1.0 (Linux; U; Android 15; PJD110 Build/AP3A.240617.008)"}
         with self.client.stream("GET", self.url, headers=headers) as r:
             if r.status_code != 206:
                 raise io.UnsupportedOperation("Remote did not return partial content!")
