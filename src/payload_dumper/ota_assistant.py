@@ -58,20 +58,24 @@ def getPartitionList(dam):
             print('partition not found')
     return result
 
-def check(dam, plist, isLocal):
+def check(dam, plist, isLocal, isCheckNewPartition):
     for part in dam.partitions:
         pname = part.partition_name
         imgpath = 'out/' + pname + '.img'
         if isLocal:
             imgpath = plist[pname]
         filehash = sha256sum(imgpath)
+        partHash = part.old_partition_info.hash.hex()
+        if isCheckNewPartition:
+            partHash = part.new_partition_info.hash.hex()
         print('Partition:\t', pname)
-        print('Hash in payload:', part.old_partition_info.hash.hex())
+        print('Size:\t', part.new_partition_info.size)
+        print('Hash in payload:', partHash)
         print('Image hash:\t', filehash)
-        if filehash == part.old_partition_info.hash.hex():
-            print('Result:\t\t <<Pass>>')
+        if filehash == partHash:
+            print('Result:\t\t \033[42m<<Pass>>\033[0m')
         else:
-            print('Result:\t\t <<Fail>>')
+            print('Result:\t\t \033[41m<<Fail>>\033[0m')
         print('')
 if __name__ == '__main__':
     if not os.path.exists('out'):
@@ -80,6 +84,7 @@ if __name__ == '__main__':
     parser.add_argument('payloadfile', type=argparse.FileType('rb'), help='payload file name')
     parser.add_argument('--check', action='store_true', help='Check integrity of partitions')
     parser.add_argument('--imageCheck', action='store_true', help='Check integrity of partition images')
+    parser.add_argument('--checkNewPart', action='store_true', help='Check hash of new partition images')
     parser.add_argument('--dump', action='store_true', help='Dump partition images')
     args = parser.parse_args()
     magic = args.payloadfile.read(4)
@@ -101,8 +106,8 @@ if __name__ == '__main__':
         plist = getPartitionList(dam)
         dump(plist)
     elif args.imageCheck:
-        check(dam, {}, False)
+        check(dam, {}, False, args.checkNewPart)
     elif args.check:
         check_privileges()
         plist = getPartitionList(dam)
-        check(dam, plist, True)
+        check(dam, plist, True, args.checkNewPart)
